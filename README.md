@@ -1,3 +1,9 @@
-# OpenGL GPU raymarcher
+# Chip-8 Emulator
 
-This project aims to become a gpu based raymarcher. This is done by using the fragmentshader, which is applied to an Mesh, which is drawn on the whole window.
+This is a implementation of an Chip-8 Emulator using C++.
+
+The rendering is done using the Mantaray Library (https://github.com/nicohirsau/Mantaray), but the emulator itself is completely independent and could be used with any rendering method.
+
+A download of a build can be found here: https://nico-preuss.com/downloads/manta8.zip
+
+To start the emulator with a game, just drag an ROM over the executable file in the windows explorer.
