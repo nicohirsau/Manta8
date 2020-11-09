@@ -39,9 +39,9 @@ bool            CHIP8::REDRAW_REQUIRED;
 void CHIP8::EmulateCycle() {
     CURRENT_OPCODE = MEMORY[PROGRAM_COUNTER] << 8 | MEMORY[PROGRAM_COUNTER + 1];
     
-    //printf("Starting Emulation Cycle...\n");
-    //printf("Current PROGRAM_COUNTER: %d\n", PROGRAM_COUNTER);
-    //printf("Current OPCODE: 0x%04X\n", CURRENT_OPCODE);
+    printf("Starting Emulation Cycle...\n");
+    printf("Current PROGRAM_COUNTER: %d\n", PROGRAM_COUNTER);
+    printf("Current OPCODE: 0x%04X\n", CURRENT_OPCODE);
 
     if (CURRENT_OPCODE == 0x0000) {
         PROGRAM_COUNTER += 2;

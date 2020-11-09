@@ -17,6 +17,8 @@ unsigned int SCR_HEIGHT = 256;
 unsigned int SCR_RES_WIDTH = 64;
 unsigned int SCR_RES_HEIGHT = 32;
 
+void UpdateInput();
+
 int main(int argc, char *argv[])
 {
     Window* window = Window::CreateWindow(
@@ -26,6 +28,7 @@ int main(int argc, char *argv[])
         Vector2f(SCR_RES_WIDTH, SCR_RES_HEIGHT)
     );
     Logger logger = Logger("Application");
+    InputManager::AddKeyToWatch(MR_KEY_SPACE);
 
     VertexArray* default_vertex_array;
     ObjectLibrary::FindObject("DefaultVertexArray", default_vertex_array);
@@ -39,6 +42,7 @@ int main(int argc, char *argv[])
 
     float elapsed_time = 0.0f;
     float delta_time = 0.0f;
+    bool halted = false;
 
     logger.Log("Starting Loop...");
     while (!window->getShouldClose())
@@ -46,11 +50,15 @@ int main(int argc, char *argv[])
         delta_time = window->update();
         elapsed_time += delta_time;
 
-        CHIP8::EmulateCycle();
+        if (InputManager::GetKeyDown(MR_KEY_SPACE)) halted = !halted;
+
+        if (!halted) {
+            UpdateInput();
+            CHIP8::EmulateCycle();
+        }
 
         if (CHIP8::REDRAW_REQUIRED) {
             window->beginFrame();
-            std::cout << "REDRAW" << std::endl;
 
             for (int y = 0; y < 32; y++) {
                 for (int x = 0; x < 64; x++) {
@@ -68,4 +76,26 @@ int main(int argc, char *argv[])
     logger.Log("Shutting down application...");
     delete window;
     return 0;
+}
+
+void UpdateInput() {
+    CHIP8::KEYPAD[0] = InputManager::GetKey(MR_KEY_1) ? 1 : 0;
+    CHIP8::KEYPAD[1] = InputManager::GetKey(MR_KEY_2) ? 1 : 0;
+    CHIP8::KEYPAD[2] = InputManager::GetKey(MR_KEY_3) ? 1 : 0;
+    CHIP8::KEYPAD[3] = InputManager::GetKey(MR_KEY_4) ? 1 : 0;
+    
+    CHIP8::KEYPAD[4] = InputManager::GetKey(MR_KEY_Q) ? 1 : 0;
+    CHIP8::KEYPAD[5] = InputManager::GetKey(MR_KEY_W) ? 1 : 0;
+    CHIP8::KEYPAD[6] = InputManager::GetKey(MR_KEY_E) ? 1 : 0;
+    CHIP8::KEYPAD[7] = InputManager::GetKey(MR_KEY_R) ? 1 : 0;
+    
+    CHIP8::KEYPAD[8] = InputManager::GetKey(MR_KEY_A) ? 1 : 0;
+    CHIP8::KEYPAD[9] = InputManager::GetKey(MR_KEY_S) ? 1 : 0;
+    CHIP8::KEYPAD[10] = InputManager::GetKey(MR_KEY_D) ? 1 : 0;
+    CHIP8::KEYPAD[11] = InputManager::GetKey(MR_KEY_F) ? 1 : 0;
+    
+    CHIP8::KEYPAD[12] = InputManager::GetKey(MR_KEY_Z) ? 1 : 0;
+    CHIP8::KEYPAD[13] = InputManager::GetKey(MR_KEY_X) ? 1 : 0;
+    CHIP8::KEYPAD[14] = InputManager::GetKey(MR_KEY_C) ? 1 : 0;
+    CHIP8::KEYPAD[15] = InputManager::GetKey(MR_KEY_V) ? 1 : 0;
 }
