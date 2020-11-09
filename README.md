@@ -1,6 +1,6 @@
 # Chip-8 Emulator
 
-This is a implementation of an Chip-8 Emulator using C++.
+This is a implementation of an Chip-8 Emulator using C++. I have written this implementation to learn how emulators work.
 
 The rendering is done using the Mantaray Library (https://github.com/nicohirsau/Mantaray), but the emulator itself is completely independent and could be used with any rendering method.
 
