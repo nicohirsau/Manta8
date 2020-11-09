@@ -11,14 +11,19 @@ namespace CHIP8 {
 
     // 4k memory
     extern unsigned char MEMORY[4096];
+
     // 15 one-bite registers and one carry flag
     extern unsigned char V[16];
+
     // 64x32 1D Array for the screen
     extern unsigned char PIXELS[64 * 32];
+
     // 32 byte stack
     extern unsigned short STACK[16];
+
     // State of the 16 Keys
     extern unsigned char KEYPAD[16];
+    
     // True, if a redraw of the screen is required
     extern bool REDRAW_REQUIRED;
 

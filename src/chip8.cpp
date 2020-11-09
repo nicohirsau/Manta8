@@ -1,6 +1,7 @@
-#include <iostream>
 #include <stdio.h>
-#include <fstream>
+#include <cstdlib>
+#include <random>
+#include <time.h>
 
 #include "chip8.hpp"
 
@@ -37,58 +38,278 @@ bool            CHIP8::REDRAW_REQUIRED;
 
 void CHIP8::EmulateCycle() {
     CURRENT_OPCODE = MEMORY[PROGRAM_COUNTER] << 8 | MEMORY[PROGRAM_COUNTER + 1];
+    
+    printf("Starting Emulation Cycle...\n");
+    printf("Current PROGRAM_COUNTER: %d\n", PROGRAM_COUNTER);
+    printf("Current OPCODE: 0x%04X\n", CURRENT_OPCODE);
+
+    if (CURRENT_OPCODE == 0x0000) {
+        PROGRAM_COUNTER += 2;
+        return;
+    }
 
     switch (CURRENT_OPCODE & 0xF000)
     {
         case 0x0000:
-            switch (CURRENT_OPCODE & 0x000F)
+            switch (CURRENT_OPCODE & 0x00FF)
             {
-                case 0x0000:
-                    // 0x00E0 Clear Screen
+                case 0x00E0: // Clears the screen
+                    for (int i = 0; i < 64 * 32; i++) {
+                        PIXELS[i] = 0;
+                    }
+                    PROGRAM_COUNTER += 2;
+                    REDRAW_REQUIRED = true;
                     break;
-                case 0x000E:
-                    // 0x00EE Return from subroutine
+                case 0x00EE: // Returns from a subroutine
+                    STACK_POINTER--;
+                    PROGRAM_COUNTER = STACK[STACK_POINTER];
+                    PROGRAM_COUNTER += 2;
+                    printf("PC from stack: 0x%04X\n", STACK[STACK_POINTER]);
                     break;
                 default:
-                printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
+                    printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
             }
             break;
         
-        case 0x1000:
+        case 0x1000: // Jumps to address 0x0NNN
             PROGRAM_COUNTER = CURRENT_OPCODE & 0x0FFF;
             break;
         
-        case 0x2000:
+        case 0x2000: // Calls subroutine at 0x0NNN
             STACK[STACK_POINTER] = PROGRAM_COUNTER;
+            printf("PC put on stack: 0x%04X\n", PROGRAM_COUNTER);
             STACK_POINTER++;
             PROGRAM_COUNTER = CURRENT_OPCODE & 0x0FFF;
             break;
 
-        case 0x3000:
+        case 0x3000: // 
             if (V[(CURRENT_OPCODE & 0x0F00) >> 8] == (CURRENT_OPCODE & 0x00FF)) PROGRAM_COUNTER += 2;
             PROGRAM_COUNTER += 2;
             break;
 
-        case 0x4000:
+        case 0x4000: // 
             if (V[(CURRENT_OPCODE & 0x0F00) >> 8] != (CURRENT_OPCODE & 0x00FF)) PROGRAM_COUNTER += 2;
             PROGRAM_COUNTER += 2;
             break;
 
-        case 0x5000:
+        case 0x5000: // 
             if (V[(CURRENT_OPCODE & 0x0F00) >> 8] == V[(CURRENT_OPCODE & 0x00F0) >> 4]) PROGRAM_COUNTER += 2;
             PROGRAM_COUNTER += 2;
             break;
 
-        case 0x6000:
-            V[(CURRENT_OPCODE & 0x0F00) >> 8] = CURRENT_OPCODE & 0x0FF;
+        case 0x6000: // 
+            V[(CURRENT_OPCODE & 0x0F00) >> 8] = CURRENT_OPCODE & 0x00FF;
             PROGRAM_COUNTER += 2;
             break;
+
+        case 0x7000: // 
+            V[(CURRENT_OPCODE & 0x0F00) >> 8] += CURRENT_OPCODE & 0x00FF;
+            PROGRAM_COUNTER += 2;
+            break;
+
+        case 0x8000: // 
+            switch (CURRENT_OPCODE & 0x000F) {
+                case 0x0000: // 
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] = V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0001: // 
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] |= V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0002: // 
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] &= V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0003: // 
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] ^= V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0004: // 
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] += V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                    if (V[(CURRENT_OPCODE & 0x00F0) >> 4] > (0xFF - V[(CURRENT_OPCODE & 0x0F00) >> 8])) {
+                        V[0xF] = 1;
+                    }
+                    else {
+                        V[0xF] = 0;
+                    }
+                    
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0005: // 
+                    if (V[(CURRENT_OPCODE & 0x00F0) >> 4] > V[(CURRENT_OPCODE & 0x0F00) >> 8]) {
+                        V[0xF] = 0;
+                    }
+                    else {
+                        V[0xF] = 1;
+                    }
+
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] -= V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0006: // 
+                    V[0xF] = V[(CURRENT_OPCODE & 0x0F00) >> 8] & 0x1;
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] = V[(CURRENT_OPCODE & 0x0F00) >> 8] >> 0x0001;
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0007:
+                    if (V[(CURRENT_OPCODE & 0x0F00) >> 8] > V[(CURRENT_OPCODE & 0x00F0) >> 4]) {
+                        V[0xF] = 0;
+                    }
+                    else {
+                        V[0xF] = 1;
+                    }
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] = V[(CURRENT_OPCODE & 0x00F0) >> 4] - V[(CURRENT_OPCODE & 0x0F00) >> 8];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x000E:
+                    V[0xF] = V[(CURRENT_OPCODE & 0x0F00) >> 8] >> 7;
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] <<= 1;
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                default:
+                    printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
+            }
+            break;
+
+        case 0x9000: // 
+            if (V[(CURRENT_OPCODE & 0x0F00) >> 8] != V[(CURRENT_OPCODE & 0x00F0) >> 4]) PROGRAM_COUNTER += 2;
+            PROGRAM_COUNTER += 2;
+            break;
+
+        case 0xA000: // 
+            INDEX_REGISTER = CURRENT_OPCODE & 0x0FFF;
+            PROGRAM_COUNTER += 2;
+            break;
+
+        case 0xB000: // 
+            PROGRAM_COUNTER = (CURRENT_OPCODE & 0x0FFF) + V[0];
+            break;
+
+        case 0xC000: // 
+            V[(CURRENT_OPCODE & 0x0F00) >> 8] = ((rand() % (0xFF + 1)) & (CURRENT_OPCODE & 0x00FF)); // TODO: Make 123 a random number
+            PROGRAM_COUNTER += 2;
+            break;
+
+        case 0xD000: // 
+            //DRAW
+            {
+                unsigned char x_coord = V[(CURRENT_OPCODE & 0x0F00) >> 8];
+                unsigned char y_coord = V[(CURRENT_OPCODE & 0x00F0) >> 4];
+                unsigned char height = CURRENT_OPCODE & 0x000F;
+
+                V[0xF] = 0;
+                for (int y = 0; y < height; y++) {
+                    unsigned char pixel_row = MEMORY[INDEX_REGISTER + y];
+                    for (int x = 0; x < 8; x++) {
+                        if ((pixel_row & (0x80 >> x)) != 0) {
+                            int pixel_position = x_coord + x + ((y_coord + y) * 64);
+                            if (PIXELS[pixel_position] == 1) {
+                                V[0xF] = 1;
+                            }
+                            PIXELS[pixel_position] ^= 1;
+                        }
+                    }
+                }
+            }
             
+            REDRAW_REQUIRED = true;
+            PROGRAM_COUNTER += 2;
+            break;
+
+        case 0xE000: // 
+            switch (CURRENT_OPCODE & 0x00FF) {
+                case 0x009E: // 
+                    if (KEYPAD[(CURRENT_OPCODE & 0x0F00) >> 8] != 0) PROGRAM_COUNTER += 2;
+                    PROGRAM_COUNTER += 2;
+                    break;
+                case 0x00A1: // 
+                    if (KEYPAD[(CURRENT_OPCODE & 0x0F00) >> 8] == 0) PROGRAM_COUNTER += 2;
+                    PROGRAM_COUNTER += 2;
+                    break;
+                default:
+                    printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
+            }
+            break;
+
+        case 0xF000: // 
+            switch (CURRENT_OPCODE & 0x00FF) {
+                case 0x0007: // 
+                    V[(CURRENT_OPCODE & 0x0F00) >> 8] = DELAY_TIMER;
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x000A: // 
+                    // Halt until keypress event
+                    break;
+
+                case 0x0015: // 
+                    DELAY_TIMER = V[(CURRENT_OPCODE & 0x0F00) >> 8];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0018: // 
+                    SOUND_TIMER = V[(CURRENT_OPCODE & 0x0F00) >> 8];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x001E: // 
+                    INDEX_REGISTER += V[(CURRENT_OPCODE & 0x0F00) >> 8];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0029: // 
+                    // FOnt operation
+                    INDEX_REGISTER = 0x5 * V[((CURRENT_OPCODE & 0x0F00) >> 8)];
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0033: // 
+                    MEMORY[INDEX_REGISTER]     =  V[(CURRENT_OPCODE & 0x0F00) >> 8] / 100;
+                    MEMORY[INDEX_REGISTER + 1] = (V[(CURRENT_OPCODE & 0x0F00) >> 8] / 10) % 10;
+                    MEMORY[INDEX_REGISTER + 2] = (V[(CURRENT_OPCODE & 0x0F00) >> 8] % 100) % 10;
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0055: // 
+                    for (int i = 0; i <= ((CURRENT_OPCODE & 0x0F00) >> 8); i++) {
+                        MEMORY[INDEX_REGISTER + i] = V[i];
+                    }
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                case 0x0065: // 
+                    for (int i = 0; i <= ((CURRENT_OPCODE & 0x0F00) >> 8); i++) {
+                        V[i] = MEMORY[INDEX_REGISTER + i];
+                    }
+                    PROGRAM_COUNTER += 2;
+                    break;
+
+                default:
+                    printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
+            }
+            break;
         default:
             printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
     }
-
-    if (PROGRAM_COUNTER >= 4096) PROGRAM_COUNTER = 0;
+    
+    if (SOUND_TIMER > 0) {
+        SOUND_TIMER--;
+        if (SOUND_TIMER == 0) {
+            printf("\a");
+            printf("BEEP!\n");
+        }
+    }
+    if (DELAY_TIMER > 0) DELAY_TIMER--;
 };
 
 void CHIP8::Reset() {
@@ -120,31 +341,44 @@ void CHIP8::Reset() {
     for (int i = 0; i < 80; i++) {
         MEMORY[i] = CHIP8_FONTSET[i];
     }
+
+    srand(time(NULL));
 }
 
 bool CHIP8::LoadRom(char *file_path) {
-    std::basic_ifstream<unsigned char> rom_file(file_path, std::ios::binary | std::ios::ate);
-
-    if (!rom_file) {
-        std::cout << "Could not open file " << file_path << std::endl;
+    FILE* rom_file = fopen(file_path, "rb");
+    if (rom_file == NULL) {
+        printf("Failed to open ROM from path: %s\n", file_path);
         return false;
     }
 
-    if (rom_file.is_open()) {
-        std::cout << "Loading ROM" << std::endl;
-        std::streampos size = rom_file.tellg();
+    fseek(rom_file, 0, SEEK_END);
+    long rom_size = ftell(rom_file);
+    rewind(rom_file);
 
-        std::cout << "ROM byte size: " << int(size) << std::endl;
-        unsigned char *rom_content = new unsigned char [size];
-
-        rom_file.seekg(0, std::ios::beg);
-        rom_file.read(rom_content, size);
-        rom_file.close();
-
-        for (int i = 0; i < int(size); i++) {
-            MEMORY[i + 0x200] = rom_content[i];
-        }
-        return true;
+    unsigned char *rom_buffer = (unsigned char *) malloc(sizeof(unsigned char) * rom_size);
+    if (rom_buffer == NULL) {
+        printf("Failed to allocate memory for ROM!\n");
+        return false;
     }
-    return false;
+
+    long result = fread(rom_buffer, sizeof(unsigned char), (long)rom_size, rom_file);
+    if (result != rom_size) {
+        printf("Failed to read ROM\n");
+        return false;
+    }
+
+    if ((4096 - 512) > rom_size) {
+        for (int i = 0; i < rom_size; i++) {
+            MEMORY[i + 512] = rom_buffer[i]; 
+        }
+    }
+    else {
+        printf("ROM too large to fit in memory\n");
+        return false;
+    }
+
+    fclose(rom_file);
+    free(rom_buffer);
+    return true;
 }

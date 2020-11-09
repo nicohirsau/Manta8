@@ -9,7 +9,7 @@ LIB		:= -L ../Mantaray/external/lib -L../Mantaray/lib
 
 LIBRARIES	:= -lMantaray -lglfw3 -lgdi32 -lglad
 
-EXECUTABLE_NAME := build
+EXECUTABLE_NAME := chip8
 ifeq ($(OS),Windows_NT)
 EXECUTABLE	:= $(EXECUTABLE_NAME).exe
 else
