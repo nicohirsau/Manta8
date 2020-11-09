@@ -4,7 +4,7 @@ C_FLAGS := -std=c++11 -static -static-libgcc -static-libstdc++
 
 BIN		:= bin
 SRC		:= src
-INCLUDE	:= -I ../Mantaray/include -I ../Mantaray/external/include
+INCLUDE	:= -I ./include -I ../Mantaray/include -I ../Mantaray/external/include
 LIB		:= -L ../Mantaray/external/lib -L../Mantaray/lib
 
 LIBRARIES	:= -lMantaray -lglfw3 -lgdi32 -lglad
