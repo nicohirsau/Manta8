@@ -39,9 +39,9 @@ bool            CHIP8::REDRAW_REQUIRED;
 void CHIP8::EmulateCycle() {
     CURRENT_OPCODE = MEMORY[PROGRAM_COUNTER] << 8 | MEMORY[PROGRAM_COUNTER + 1];
     
-    printf("Starting Emulation Cycle...\n");
-    printf("Current PROGRAM_COUNTER: %d\n", PROGRAM_COUNTER);
-    printf("Current OPCODE: 0x%04X\n", CURRENT_OPCODE);
+    //printf("Starting Emulation Cycle...\n");
+    //printf("Current PROGRAM_COUNTER: %d\n", PROGRAM_COUNTER);
+    //printf("Current OPCODE: 0x%04X\n", CURRENT_OPCODE);
 
     if (CURRENT_OPCODE == 0x0000) {
         PROGRAM_COUNTER += 2;
@@ -196,7 +196,7 @@ void CHIP8::EmulateCycle() {
             break;
 
         case 0xC000: // 
-            V[(CURRENT_OPCODE & 0x0F00) >> 8] = ((rand() % (0xFF + 1)) & (CURRENT_OPCODE & 0x00FF)); // TODO: Make 123 a random number
+            V[(CURRENT_OPCODE & 0x0F00) >> 8] = ((rand() % (0xFF + 1)) & (CURRENT_OPCODE & 0x00FF));
             PROGRAM_COUNTER += 2;
             break;
 
@@ -229,13 +229,15 @@ void CHIP8::EmulateCycle() {
         case 0xE000: // 
             switch (CURRENT_OPCODE & 0x00FF) {
                 case 0x009E: // 
-                    if (KEYPAD[(CURRENT_OPCODE & 0x0F00) >> 8] != 0) PROGRAM_COUNTER += 2;
+                    if (KEYPAD[V[(CURRENT_OPCODE & 0x0F00) >> 8]] != 0) PROGRAM_COUNTER += 2;
                     PROGRAM_COUNTER += 2;
                     break;
+
                 case 0x00A1: // 
-                    if (KEYPAD[(CURRENT_OPCODE & 0x0F00) >> 8] == 0) PROGRAM_COUNTER += 2;
+                    if (KEYPAD[V[(CURRENT_OPCODE & 0x0F00) >> 8]] == 0) PROGRAM_COUNTER += 2;
                     PROGRAM_COUNTER += 2;
                     break;
+
                 default:
                     printf("Unknown Opcode: 0x%04X\n", CURRENT_OPCODE);
             }
@@ -258,7 +260,7 @@ void CHIP8::EmulateCycle() {
                                 key_pressed = true;
                             }
                         }
-    
+
                         // If no key was pressed, do not increment PC
                         if (!key_pressed) return;
                     }
