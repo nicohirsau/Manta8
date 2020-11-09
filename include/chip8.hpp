@@ -1,7 +1,6 @@
 #pragma once
 
 namespace CHIP8 {
-    extern unsigned char CHIP8_FONTSET[80];
     extern unsigned short CURRENT_OPCODE;
     extern unsigned short INDEX_REGISTER;
     extern unsigned short PROGRAM_COUNTER;

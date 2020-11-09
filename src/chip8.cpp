@@ -5,7 +5,7 @@
 
 #include "chip8.hpp"
 
-unsigned char CHIP8::CHIP8_FONTSET[80] = { 
+unsigned char CHIP8_FONTSET[80] = { 
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -23,6 +23,7 @@ unsigned char CHIP8::CHIP8_FONTSET[80] = {
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 };
+
 unsigned short  CHIP8::CURRENT_OPCODE;
 unsigned short  CHIP8::INDEX_REGISTER;
 unsigned short  CHIP8::PROGRAM_COUNTER;
