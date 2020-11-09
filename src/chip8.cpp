@@ -250,6 +250,18 @@ void CHIP8::EmulateCycle() {
 
                 case 0x000A: // 
                     // Halt until keypress event
+                    bool key_pressed = false;
+                    for (int i = 0; i < 16; i++) {
+                        if (KEYPAD[i] != 0) {
+                            V[(CURRENT_OPCODE & 0x0F00) >> 8] = i;
+                            key_pressed = true;
+                        }
+                    }
+
+                    // If no key was pressed, do not increment PC
+                    if (!key_pressed) return;
+
+                    PROGRAM_COUNTER += 2;
                     break;
 
                 case 0x0015: // 
